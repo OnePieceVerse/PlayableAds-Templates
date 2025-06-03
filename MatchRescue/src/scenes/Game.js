@@ -22,10 +22,10 @@ export class GameScene extends Phaser.Scene {
         this.add.image(300, 400, 'background');
 
         // add falling brickwall
-        this.brickwall = this.physics.add.image(300, 50, 'brickwall');
+        this.brickwall = this.physics.add.image(300, -460, 'brickwall');
+        this.brickwall.setDepth(1);
         this.brickwall.setVelocityY(5); // Slow falling speed
-        this.brickwall.setBounce(0);
-        this.brickwall.setCollideWorldBounds(true);
+        //this.brickwall.setCollideWorldBounds(true);
 
         // add physics group
         this.blocksGroup = this.physics.add.staticGroup();
@@ -278,6 +278,19 @@ export class GameScene extends Phaser.Scene {
     checkAllMatches(isInitialCheck = false) {
         let hasMatches = false;
 
+        // Reset matched flags if we're checking for new matches (not during initial board setup)
+        // This prevents blocks from being incorrectly eliminated in consecutive checks
+        if (!isInitialCheck) {
+            for (let row = 0; row < this.boardSize; row++) {
+                for (let col = 0; col < this.boardSize; col++) {
+                    const tile = this.board[row][col];
+                    if (tile) {
+                        tile.setData('matched', false);
+                    }
+                }
+            }
+        }
+
         // Check horizontal matches
         for (let row = 0; row < this.boardSize; row++) {
             for (let col = 0; col < this.boardSize - 2; col++) {
@@ -361,6 +374,8 @@ export class GameScene extends Phaser.Scene {
                         duration: 300,
                         ease: 'Power2',
                         onComplete: () => {
+                            // Remove from physics group before destroying
+                            this.blocksGroup.remove(tile, true, true);
                             tile.destroy();
                         }
                     });
@@ -391,6 +406,11 @@ export class GameScene extends Phaser.Scene {
                         if (this.board[aboveRow][col]) {
                             // Move this tile down
                             const tile = this.board[aboveRow][col];
+
+                            // Remove from physics group before moving
+                            this.blocksGroup.remove(tile, true, true);
+
+                            // Update board references
                             this.board[row][col] = tile;
                             this.board[aboveRow][col] = null;
 
@@ -402,7 +422,13 @@ export class GameScene extends Phaser.Scene {
                                 targets: tile,
                                 y: this.boardOffsetY + row * this.tileSize + this.tileSize / 2,
                                 duration: 300,
-                                ease: 'Bounce'
+                                ease: 'Bounce',
+                                onComplete: () => {
+                                    // Re-add to physics group at new position
+                                    this.blocksGroup.add(tile);
+                                    // The static physics group will automatically create a physics body
+                                    // at the sprite's current position
+                                }
                             });
 
                             hasTilesFallen = true;
@@ -410,7 +436,6 @@ export class GameScene extends Phaser.Scene {
                             break;
                         }
                     }
-
                     // No new tiles are created - empty spaces remain empty
                 }
             }
@@ -435,6 +460,13 @@ export class GameScene extends Phaser.Scene {
         // Check if the brickwall has stopped moving (collided with something)
         if (this.brickwall && Math.abs(this.brickwall.body.velocity.y) < 10) {
             this.brickwall.setVelocityY(0);
+        }
+
+        // Ensure player is always affected by gravity
+        // This prevents the player from getting stuck in mid-air
+        if (this.player && !this.player.body.blocked.down && this.player.body.velocity.y < 100) {
+            // Apply a small downward force if player is not on ground and not already falling fast
+            this.player.setVelocityY(this.player.body.velocity.y + 10);
         }
     }
 
