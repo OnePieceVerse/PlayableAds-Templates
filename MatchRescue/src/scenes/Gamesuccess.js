@@ -14,6 +14,17 @@ export class GamesuccessScene extends Phaser.Scene {
 
     create() {
         // Create game objects
+        // Create game objects
+        this.add.image(300, 400, 'background');
+
+        this.add.text(300, 200, 'Game Success!', {
+            fontSize: '64px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6,
+            align: 'center'
+        }).setOrigin(0.5);
     }
 
 }

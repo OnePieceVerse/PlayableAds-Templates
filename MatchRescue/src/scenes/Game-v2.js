@@ -10,7 +10,7 @@ export class GameScene extends Phaser.Scene {
         this.boardOffsetY = 200; // Y offset for the board
         this.selectedTile = null; // Currently selected tile
         this.canMove = true; // Flag to control if player can make moves
-        this.matchTypes = ['crystal', 'heart', 'star']; // Available tile types
+        this.matchTypes = ['crystal', 'heart', 'star']; // Available tile typess
     }
 
     preload() {
@@ -21,40 +21,28 @@ export class GameScene extends Phaser.Scene {
         // Add background
         this.add.image(300, 400, 'background');
 
-        // Add physics group for tiles
-        this.blocksGroup = this.physics.add.group({
-            allowGravity: false,
-            immovable: true
-        });
+        // add falling brickwall
+        this.brickwall = this.physics.add.image(300, -460, 'brickwall');
+        this.brickwall.setDepth(1);
+        this.brickwall.setVelocityY(5); // Slow falling speed
+
+        // add physics group
+        this.blocksGroup = this.physics.add.staticGroup();
 
         // Create game board
         this.board = [];
         this.createBoard();
 
         // Add player
-        const playerPositionX = Phaser.Math.RND.pick([30, 90, 150, 210, 270, 330, 390, 450, 510, 570]);
-        this.player = new Player(this, playerPositionX, 150);
+        const playerPostionX = Phaser.Math.RND.pick([30, 90, 150, 210, 270, 330, 390, 450, 510, 570]);
+        this.player = new Player(this, playerPostionX, 150);
         this.player.setVelocityY(100);
         this.player.anxiety();
 
         // Add physics collision
         this.physics.add.collider(this.player, this.blocksGroup);
 
-        // Add Platform
-        this.platform = this.physics.add.sprite(300, 850, 'platform');
-        this.platform.setImmovable(true); // can not move
-        this.platform.body.allowGravity = false; // disable gravity
-        this.platform.setCollideWorldBounds(true);
-
-        this.physics.add.collider(this.player, this.platform, this.gameSuccess, null, this);
-
-
-        // Add falling brickwall
-        this.brickwall = this.physics.add.sprite(300, -460, 'brickwall');
-        this.brickwall.setDepth(1);
-        this.brickwall.body.allowGravity = false; // Disable gravity to maintain constant speed
-        this.brickwall.setVelocityY(20); // Very slow falling speed
-
+        // Add collision between player and brickwall that triggers game over
         this.physics.add.collider(this.player, this.brickwall, this.gameOver, null, this);
 
         // Add input event listeners
@@ -84,13 +72,9 @@ export class GameScene extends Phaser.Scene {
         const y = this.boardOffsetY + row * this.tileSize + this.tileSize / 2;
 
         // Create the tile sprite
-        const tile = this.physics.add.sprite(x, y, randomType);
-        tile.setScale(this.tileSize / tile.width * 0.98); // Scale to fit the tile size with some padding
+        const tile = this.add.sprite(x, y, randomType);
+        tile.setScale(this.tileSize / tile.width * 0.983); // Scale to fit the tile size with some padding
         tile.setInteractive(); // Make it interactive for input events
-
-        // Configure physics
-        tile.body.setImmovable(true);
-        tile.body.allowGravity = false;
 
         // Store the tile properties
         tile.setData({
@@ -132,7 +116,17 @@ export class GameScene extends Phaser.Scene {
 
         // If the same tile is clicked again, deselect it
         if (this.selectedTile === tile) {
-            this.clearTileSelection();
+            // Clear tint
+            this.selectedTile.clearTint();
+
+            // Stop the pulsing animation
+            if (this.selectedTile.highlightTween) {
+                this.selectedTile.highlightTween.stop();
+                // Reset to original scale
+                this.selectedTile.setScale(this.tileSize / this.selectedTile.width * 0.983);
+            }
+
+            this.selectedTile = null;
             return;
         }
 
@@ -152,39 +146,48 @@ export class GameScene extends Phaser.Scene {
             this.swapTiles(this.selectedTile, tile);
         } else {
             // Not adjacent, deselect first tile and select the new one
-            this.clearTileSelection();
-            this.selectedTile = tile;
-            this.highlightTile(tile);
-        }
-    }
-
-    clearTileSelection() {
-        if (this.selectedTile) {
+            // Clear highlighting effects
             this.selectedTile.clearTint();
+
+            // Stop the pulsing animation
             if (this.selectedTile.highlightTween) {
                 this.selectedTile.highlightTween.stop();
-                this.selectedTile.setScale(this.tileSize / this.selectedTile.width * 0.98);
+                // Reset to original scale
+                this.selectedTile.setScale(this.tileSize / this.selectedTile.width * 0.983);
             }
-            this.selectedTile = null;
-        }
-    }
 
-    highlightTile(tile) {
-        tile.setTint(0xffff00);
-        this.tweens.add({
-            targets: tile,
-            scale: tile.scale * 1.1,
-            duration: 300,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
-        tile.highlightTween = this.tweens.getTweensOf(tile)[0];
+            this.selectedTile = tile;
+
+            // Apply new highlighting
+            tile.setTint(0xffff00);
+
+            // Add a pulsing scale effect
+            this.tweens.add({
+                targets: tile,
+                scale: tile.scale * 1.1,
+                duration: 300,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            // Store the tween reference
+            tile.highlightTween = this.tweens.getTweensOf(tile)[0];
+        }
     }
 
     swapTiles(tile1, tile2) {
         this.canMove = false;
-        this.clearTileSelection();
+
+        // Clear the selection tint and effects
+        tile1.clearTint();
+
+        // Stop the pulsing animation if it exists
+        if (tile1.highlightTween) {
+            tile1.highlightTween.stop();
+            // Reset to original scale
+            tile1.setScale(this.tileSize / tile1.width);
+        }
 
         // Store the original positions
         const tile1Pos = { x: tile1.x, y: tile1.y };
@@ -210,7 +213,15 @@ export class GameScene extends Phaser.Scene {
             x: tile2Pos.x,
             y: tile2Pos.y,
             duration: 200,
-            ease: 'Power2'
+            ease: 'Power2',
+            onUpdate: () => {
+                // Temporarily disable player physics during swap
+                this.player.body.checkCollision.none = true;
+            },
+            onComplete: () => {
+                // Restore player physics after swap
+                this.player.body.checkCollision.none = false;
+            }
         });
 
         this.tweens.add({
@@ -219,7 +230,13 @@ export class GameScene extends Phaser.Scene {
             y: tile1Pos.y,
             duration: 200,
             ease: 'Power2',
+            onUpdate: () => {
+                // Temporarily disable player physics during swap
+                this.player.body.checkCollision.none = true;
+            },
             onComplete: () => {
+                // Restore player physics after swap
+                this.player.body.checkCollision.none = false;
                 // Check for matches after the swap
                 const hasMatches = this.checkAllMatches();
 
@@ -227,6 +244,7 @@ export class GameScene extends Phaser.Scene {
                     // If no matches, swap back
                     this.swapTilesBack(tile1, tile2, tile1Pos, tile2Pos);
                 } else {
+                    this.selectedTile = null;
                     this.processMatches();
                 }
             }
@@ -264,6 +282,7 @@ export class GameScene extends Phaser.Scene {
             duration: 200,
             ease: 'Power2',
             onComplete: () => {
+                this.selectedTile = null;
                 this.canMove = true;
             }
         });
@@ -284,12 +303,12 @@ export class GameScene extends Phaser.Scene {
             }
         }
 
-        // Track all matched positions - use Set to avoid duplicates
-        const matchedPositions = new Set();
+        // Track all matched positions
+        const matchedPositions = [];
 
         // Check horizontal matches
         for (let row = 0; row < this.boardSize; row++) {
-            for (let col = 0; col <= this.boardSize - 3; col++) {
+            for (let col = 0; col < this.boardSize - 2; col++) {
                 const tile1 = this.board[row][col];
                 const tile2 = this.board[row][col + 1];
                 const tile3 = this.board[row][col + 2];
@@ -306,18 +325,10 @@ export class GameScene extends Phaser.Scene {
                         tile3.setTexture(newType);
                         tile3.setData('type', newType);
                     } else {
-                        // Store matched positions using unique keys
-                        matchedPositions.add(`${row},${col}`);
-                        matchedPositions.add(`${row},${col+1}`);
-                        matchedPositions.add(`${row},${col+2}`);
-
-                        // Check for longer matches
-                        let extendCol = col + 3;
-                        while (extendCol < this.boardSize && this.board[row][extendCol] &&
-                               this.board[row][extendCol].getData('type') === tile1.getData('type')) {
-                            matchedPositions.add(`${row},${extendCol}`);
-                            extendCol++;
-                        }
+                        // Store matched positions
+                        matchedPositions.push({row, col});
+                        matchedPositions.push({row, col: col+1});
+                        matchedPositions.push({row, col: col+2});
                     }
                 }
             }
@@ -325,7 +336,7 @@ export class GameScene extends Phaser.Scene {
 
         // Check vertical matches
         for (let col = 0; col < this.boardSize; col++) {
-            for (let row = 0; row <= this.boardSize - 3; row++) {
+            for (let row = 0; row < this.boardSize - 2; row++) {
                 const tile1 = this.board[row][col];
                 const tile2 = this.board[row + 1][col];
                 const tile3 = this.board[row + 2][col];
@@ -342,29 +353,20 @@ export class GameScene extends Phaser.Scene {
                         tile3.setTexture(newType);
                         tile3.setData('type', newType);
                     } else {
-                        // Store matched positions using unique keys
-                        matchedPositions.add(`${row},${col}`);
-                        matchedPositions.add(`${row+1},${col}`);
-                        matchedPositions.add(`${row+2},${col}`);
-
-                        // Check for longer matches
-                        let extendRow = row + 3;
-                        while (extendRow < this.boardSize && this.board[extendRow][col] &&
-                               this.board[extendRow][col].getData('type') === tile1.getData('type')) {
-                            matchedPositions.add(`${extendRow},${col}`);
-                            extendRow++;
-                        }
+                        // Store matched positions
+                        matchedPositions.push({row, col});
+                        matchedPositions.push({row: row+1, col});
+                        matchedPositions.push({row: row+2, col});
                     }
                 }
             }
         }
 
         // Mark matched tiles after all checks
-        if (!isInitialCheck && matchedPositions.size > 0) {
+        if (!isInitialCheck && matchedPositions.length > 0) {
             // Set matched flag for all matched positions
-            for (const posKey of matchedPositions) {
-                const [row, col] = posKey.split(',').map(Number);
-                const tile = this.board[row][col];
+            for (const pos of matchedPositions) {
+                const tile = this.board[pos.row][pos.col];
                 if (tile) {
                     tile.setData('matched', true);
                 }
@@ -387,11 +389,8 @@ export class GameScene extends Phaser.Scene {
         for (let row = 0; row < this.boardSize; row++) {
             for (let col = 0; col < this.boardSize; col++) {
                 const tile = this.board[row][col];
-                if (tile && tile.getData('matched') === true) {
+                if (tile && tile.getData('matched') === true) {  // Strict equality check
                     matchCount++;
-
-                    // Remove from physics group immediately
-                    this.blocksGroup.remove(tile, true, false);
 
                     // Animate the tile removal
                     this.tweens.add({
@@ -401,19 +400,20 @@ export class GameScene extends Phaser.Scene {
                         duration: 300,
                         ease: 'Power2',
                         onComplete: () => {
-                            // Destroy the tile
+                            // Remove from physics group before destroying
+                            this.blocksGroup.remove(tile, true, true);
                             tile.destroy();
                         }
                     });
 
-                    // Clear the reference in the board array immediately
+                    // Clear the reference in the board array
                     this.board[row][col] = null;
                 }
             }
         }
 
         // After a delay, make the tiles fall and create new ones
-        this.time.delayedCall(350, () => {
+        this.time.delayedCall(500, () => {
             this.makeTilesFall();
         });
     }
@@ -421,90 +421,56 @@ export class GameScene extends Phaser.Scene {
     makeTilesFall() {
         let hasTilesFallen = false;
 
-        // Process from bottom to top
+        // Process from bottom to top, right to left
         for (let col = 0; col < this.boardSize; col++) {
             for (let row = this.boardSize - 1; row >= 0; row--) {
                 // If this position is empty, look for a tile above to fall down
                 if (!this.board[row][col]) {
                     // Find the closest tile above
+                    let foundTile = false;
                     for (let aboveRow = row - 1; aboveRow >= 0; aboveRow--) {
                         if (this.board[aboveRow][col]) {
                             // Move this tile down
                             const tile = this.board[aboveRow][col];
 
-                            // Update board references first
+                            // Remove from physics group before moving
+                            this.blocksGroup.remove(tile, true, true);
+
+                            // Update board references
                             this.board[row][col] = tile;
                             this.board[aboveRow][col] = null;
 
-                            // Update the tile's row data
+                            // Update the tile's row AND column data
                             tile.setData('row', row);
-
-                            // Calculate new position
-                            const newY = this.boardOffsetY + row * this.tileSize + this.tileSize / 2;
+                            tile.setData('col', col);
 
                             // Animate the fall
                             this.tweens.add({
                                 targets: tile,
-                                y: newY,
+                                y: this.boardOffsetY + row * this.tileSize + this.tileSize / 2,
                                 duration: 300,
-                                ease: 'Bounce.easeOut',
-                                onUpdate: () => {
-                                    // Update physics body during animation
-                                    if (tile.body) {
-                                        tile.body.updateFromGameObject();
-                                    }
-                                },
+                                ease: 'Bounce',
                                 onComplete: () => {
-                                    // Ensure the tile is in the physics group
-                                    if (!this.blocksGroup.contains(tile)) {
-                                        this.blocksGroup.add(tile);
-                                    }
-                                    // Final physics body update
-                                    if (tile.body) {
-                                        tile.body.updateFromGameObject();
-                                    }
+                                    // Re-add to physics group at new position
+                                    this.blocksGroup.add(tile);
                                 }
                             });
 
                             hasTilesFallen = true;
+                            foundTile = true;
                             break;
                         }
                     }
+                    // No new tiles are created - empty spaces remain empty
                 }
             }
         }
 
-        // Fill empty spaces at the top with new tiles
-        /*
-        for (let col = 0; col < this.boardSize; col++) {
-            for (let row = 0; row < this.boardSize; row++) {
-                if (!this.board[row][col]) {
-                    const tile = this.createTile(row, col);
-
-                    // Start the tile above the board and animate it falling
-                    tile.y = this.boardOffsetY - this.tileSize;
-
-                    this.tweens.add({
-                        targets: tile,
-                        y: this.boardOffsetY + row * this.tileSize + this.tileSize / 2,
-                        duration: 400,
-                        ease: 'Bounce.easeOut',
-                        onComplete: () => {
-                            this.blocksGroup.add(tile);
-                        }
-                    });
-
-                    hasTilesFallen = true;
-                }
-            }
-        }
-        */
-
-        // After tiles have settled, check for new matches
+        // After all tiles have fallen, check for new matches
         if (hasTilesFallen) {
             this.time.delayedCall(400, () => {
-                const hasNewMatches = this.checkAllMatches();
-                if (hasNewMatches) {
+                const hasMatches = this.checkAllMatches();
+                if (hasMatches) {
                     this.processMatches();
                 } else {
                     this.canMove = true;
@@ -516,37 +482,30 @@ export class GameScene extends Phaser.Scene {
     }
 
     update() {
-        // Ensure player physics are working correctly
-        if (this.player && this.player.body) {
-            // If player is not touching any solid ground and not already falling fast
-            if (!this.player.body.blocked.down && Math.abs(this.player.body.velocity.y) < 50) {
-                // Make sure gravity is applied
-                this.player.body.allowGravity = true;
-                // Give a small push if completely stuck
-                if (this.player.body.velocity.y === 0) {
-                    this.player.setVelocityY(50);
-                }
-            }
+        // Check if the brickwall has stopped moving (collided with something)
+        if (this.brickwall && Math.abs(this.brickwall.body.velocity.y) < 10) {
+            this.brickwall.setVelocityY(0);
+        }
+
+        // Ensure player is always affected by gravity
+        // This prevents the player from getting stuck in mid-air
+        if (this.player && !this.player.body.blocked.down && this.player.body.velocity.y < 100) {
+            // Apply a small downward force if player is not on ground and not already falling fast
+            this.player.setVelocityY(this.player.body.velocity.y + 10);
         }
     }
 
     gameOver() {
-        console.log('Game Over!');
+        // Stop the game
         this.physics.pause();
-        this.player.idle();
+
+        // Stop player animations and tint red to indicate game over
         this.player.setTint(0xff0000);
+        this.player.anims.stop();
+
         this.time.delayedCall(1000, () => {
             this.scene.start('GameoverScene');
-        });
+        })
     }
 
-    gameSuccess() {
-        console.log('Game Success!');
-        this.physics.pause();
-        this.player.idle();
-        this.player.setTint(0x00ff00);
-        this.time.delayedCall(1000, () => {
-            this.scene.start('GamesuccessScene');
-        });
-    }
 }
