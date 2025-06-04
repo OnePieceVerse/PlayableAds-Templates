@@ -44,7 +44,6 @@ export class GameScene extends Phaser.Scene {
         this.platform = this.physics.add.sprite(300, 850, 'platform');
         this.platform.setImmovable(true); // can not move
         this.platform.body.allowGravity = false; // disable gravity
-        this.platform.setCollideWorldBounds(true);
 
         this.physics.add.collider(this.player, this.platform, this.gameSuccess, null, this);
 
