@@ -12,4 +12,5 @@
 | -------- | -------- |
 | [JumpEscape](./JumpEscape) | A game that allows you to control the player to jump upwards to avoid poison water. |
 | [MatchRescue](./MatchRescue) | A game that allows you to match tiles to let the player escape from the falling brickwall. |
+| [JigsawPuzzle](./JigsawPuzzle) | A game that allows you to drag and drop pieces to complete the puzzle. |
 
