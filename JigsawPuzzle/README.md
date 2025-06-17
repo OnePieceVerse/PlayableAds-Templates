@@ -4,3 +4,5 @@ the image is cropped into pieces and you need to drag and drop the pieces to the
 As time passes, the complete image in the background will gradually disappear, and you need to complete the puzzle within the allotted time.
 After drag and drop the pieces to the correct position, the pieces will be the same size as the original image.
 
+## split image tool
+[Split Image Online](https://pinetools.com/split-image)
