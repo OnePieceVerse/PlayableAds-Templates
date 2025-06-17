@@ -53,7 +53,7 @@ export class Game extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Setup mole positions (3x3 grid)
-        const startX = 100;
+        const startX = 160;
         const startY = 200;
         const spacingX = 140;
         const spacingY = 120;
