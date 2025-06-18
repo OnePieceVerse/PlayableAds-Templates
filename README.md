@@ -14,4 +14,5 @@
 | [MatchRescue](./MatchRescue) | A game that allows you to match tiles to let the player escape from the falling brickwall. |
 | [JigsawPuzzle](./JigsawPuzzle) | A game that allows you to drag and drop pieces to complete the puzzle. |
 | [WhackMole](./WhackMole) | A game that allows you to whack the moles to earn points. |
+| [MemoryPick](./MemoryPick) | A game that allows you to memorize the target image and pick them from the grid. |
 
