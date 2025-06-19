@@ -226,7 +226,7 @@
                 (gltf) => {
                     model = gltf.scene;
                     model.scale.set(1.2, 1.2, 1.2);
-                    model.position.set(0, -2.5, 0);
+                    model.position.set(1.5, 1.5, 2);
                     model.rotation.y = Math.PI * 0.25;
 
                     // 遍历模型，使其所有部分都能投射和接收阴影
@@ -266,6 +266,7 @@
                     model2.scale.set(1.2, 1.2, 1.2);
                     model2.position.set(-1.5, 1.5, 2); // 放置在左侧
                     model2.rotation.x = - Math.PI / 2; // 旋转90度
+                    model2.rotation.z = Math.PI * 0.25;
 
                     // 确保模型可以投射和接收阴影
                     model2.traverse((node) => {
@@ -302,7 +303,7 @@
 
                 // 初始状态：宇航员在画框后面漂浮
                 tl.to(model.position, {
-                    x: 0, y: -1, z: -1, duration: 3, ease: 'power1.inOut'
+                    x: 0, y: -1, z: -1.5, duration: 3, ease: 'power1.inOut'
                 });
                 tl.to(model.rotation, {
                     y: Math.PI * 0.5, duration: 3, ease: 'power1.inOut'
@@ -310,7 +311,7 @@
 
                 // 破屏而出！
                 tl.to(model.position, {
-                    x: 0,
+                    x: 2,
                     y: 1,
                     z: 3, // Z轴向前，穿越画框
                     duration: 2.5,
@@ -320,12 +321,12 @@
                     y: Math.PI * 0.1, duration: 2.5, ease: 'power3.out'
                 }, "<");
                 tl.to(model.scale, {
-                    x: 1.4, y: 1.4, z: 1.4, duration: 2.5, ease: 'power3.out'
+                    x: 1.2, y: 1.2, z: 1.2, duration: 2.5, ease: 'power3.out'
                 }, "<");
 
                 // 回到画框内
                 tl.to(model.position, {
-                    x: 0, y: -2.5, z: 0, duration: 3, ease: 'power2.inOut'
+                    x: 0, y: -3.0, z: -2.0, duration: 3, ease: 'power2.inOut'
                 }, ">2"); // 延迟2秒后返回
                 tl.to(model.rotation, {
                     y: Math.PI * 0.25, duration: 3, ease: 'power2.inOut'
@@ -343,22 +344,19 @@
 
                 // 初始状态：模型在画框后面
                 tl.to(model2.position, {
-                    x: -1.5, y: 1, z: -1, duration: 3, ease: 'power1.inOut'
+                    x: -1.5, y: 1, z: -2.0, duration: 3, ease: 'power1.inOut'
                 });
-                tl.to(model2.rotation, {
-                    y: Math.PI * -0.5, duration: 3, ease: 'power1.inOut'
-                }, "<");
 
                 // 破屏而出！
                 tl.to(model2.position, {
                     x: -2,
-                    y: 1,
+                    y: 2,
                     z: 3, // Z轴向前，穿越画框
                     duration: 2.5,
                     ease: 'power3.out'
                 }, ">1");
                 tl.to(model2.rotation, {
-                    y: Math.PI * -0.1, duration: 2.5, ease: 'power3.out'
+                    z: Math.PI * 0.25, duration: 2.5, ease: 'power3.out'
                 }, "<");
                 tl.to(model2.scale, {
                     x: 1.4, y: 1.4, z: 1.4, duration: 2.5, ease: 'power3.out'
@@ -366,10 +364,10 @@
 
                 // 回到画框内
                 tl.to(model2.position, {
-                    x: -1.5, y: 1.5, z: 2, duration: 3, ease: 'power2.inOut'
+                    x: -1.5, y: 1.5, z: -2.0, duration: 3, ease: 'power2.inOut'
                 }, ">2");
                 tl.to(model2.rotation, {
-                    x: -Math.PI / 2, duration: 3, ease: 'power2.inOut'
+                    z: -Math.PI * 0.25 , duration: 3, ease: 'power2.inOut'
                 }, "<");
                 tl.to(model2.scale, {
                     x: 1.2, y: 1.2, z: 1.2, duration: 3, ease: 'power2.inOut'
