@@ -97,8 +97,12 @@
     <!-- 导入所需库 -->
     <!-- Three.js核心库 -->
     <script src="./js/three.min.js"></script>
+    <!-- fflate压缩库 (FBXLoader依赖) -->
+    <script src="./js/fflate.min.js"></script>
     <!-- GLTF模型加载器 -->
     <script src="./js/GLTFLoader.js"></script>
+    <!-- FBX模型加载器 -->
+    <script src="./js/FBXLoader.js"></script>
     <!-- 轨道控制器 (用于交互) -->
     <script src="./js/OrbitControls.js"></script>
     <!-- GSAP动画库 (用于制作流畅动画) -->
@@ -107,10 +111,11 @@
     <script type="module">
         // 等待所有脚本加载完毕
         window.onload = () => {
-            // FIX: GLTFLoader and OrbitControls are properties of the global THREE object,
+            // FIX: GLTFLoader, FBXLoader and OrbitControls are properties of the global THREE object,
             // not directly on the window. We get them from THREE.
             const THREE = window.THREE;
             const { GLTFLoader } = THREE;
+            const { FBXLoader } = THREE;
             const { OrbitControls } = THREE;
 
             // --- 变量和常量定义 ---
@@ -119,6 +124,8 @@
             const loaderElement = document.querySelector('#loader');
             let model, mixer, animationClip, animationAction;
             let model2, mixer2, animationClip2, animationAction2;
+            let model3, mixer3, animationClip3, animationAction3;
+            let model4, mixer4, animationClip4, animationAction4;
 
             // --- 1. 场景初始化 (Scene Initialization) ---
             const scene = new THREE.Scene();
@@ -294,6 +301,47 @@
                 }
             );
 
+            // 加载第三个模型 anim-doll.glb (Load the third model - anim-doll)
+            gltfLoader.load(
+                './models/anim-doll.glb',
+                (gltf) => {
+                    model3 = gltf.scene;
+                    model3.scale.set(0.8, 0.8, 0.8);
+                    model3.position.set(0, -1, 2); // 放置在中下方
+                    model3.rotation.y = Math.PI; // 旋转180度面向前方
+
+                    // 确保模型可以投射和接收阴影
+                    model3.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+                        }
+                    });
+
+                    scene.add(model3);
+
+                    // 加载模型的内置动画并循环播放
+                    mixer3 = new THREE.AnimationMixer(model3);
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        // 播放所有动画或选择第一个动画
+                        animationClip3 = gltf.animations[0];
+                        animationAction3 = mixer3.clipAction(animationClip3);
+                        animationAction3.setLoop(THREE.LoopRepeat); // 设置循环播放
+                        animationAction3.play();
+
+                        console.log(`anim-doll.glb 加载成功，包含 ${gltf.animations.length} 个动画`);
+                    } else {
+                        console.log('anim-doll.glb 没有包含动画');
+                    }
+
+                    startBreakoutAnimation3();
+                },
+                undefined,
+                (error) => {
+                    console.error('An error happened while loading the anim-doll model:', error);
+                }
+            );
+
             // --- 8. "破屏"动画 (Breakout Animation) ---
             function startBreakoutAnimation() {
                 if (!model) return;
@@ -374,6 +422,47 @@
                 }, "<");
             }
 
+            function startBreakoutAnimation3() {
+                if (!model3) return;
+
+                // 使用GSAP创建一个无限循环的时间线动画，与其他模型错开时间
+                const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.5, delay: 1 });
+
+                // 初始状态：anim-doll在画框后面
+                tl.to(model3.position, {
+                    x: 0, y: -1.5, z: -1.8, duration: 2.5, ease: 'power1.inOut'
+                });
+                tl.to(model3.rotation, {
+                    y: Math.PI * 1.2, duration: 2.5, ease: 'power1.inOut'
+                }, "<");
+
+                // 破屏而出！从中下方穿越画框
+                tl.to(model3.position, {
+                    x: 0,
+                    y: 0.5,
+                    z: 3.5, // Z轴向前，穿越画框
+                    duration: 3,
+                    ease: 'power2.out'
+                }, ">0.8");
+                tl.to(model3.rotation, {
+                    y: Math.PI * 2, duration: 3, ease: 'power2.out'
+                }, "<");
+                tl.to(model3.scale, {
+                    x: 1.1, y: 1.1, z: 1.1, duration: 3, ease: 'power2.out'
+                }, "<");
+
+                // 回到画框内
+                tl.to(model3.position, {
+                    x: 0, y: -1, z: -2.2, duration: 2.8, ease: 'power1.inOut'
+                }, ">1.5");
+                tl.to(model3.rotation, {
+                    y: Math.PI, duration: 2.8, ease: 'power1.inOut'
+                }, "<");
+                tl.to(model3.scale, {
+                    x: 0.8, y: 0.8, z: 0.8, duration: 2.8, ease: 'power1.inOut'
+                }, "<");
+            }
+
             // --- 9. 响应式布局 (Responsive Layout) ---
             function onWindowResize() {
                 const width = sceneContainer.clientWidth;
@@ -395,6 +484,12 @@
                 }
                 if(mixer2) {
                     mixer2.update(delta);
+                }
+                if(mixer3) {
+                    mixer3.update(delta);
+                }
+                if(mixer4) {
+                    mixer4.update(delta);
                 }
 
                 controls.update(); // 更新控制器
