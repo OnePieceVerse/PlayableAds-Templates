@@ -1,3 +1,5 @@
+import themeConfig from '../config/ThemeConfig.js';
+
 export default class GameOverScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameOverScene' });
@@ -8,58 +10,55 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('bg', './assets/flappy_penguin/bg.png');
-
+        this.load.image(themeConfig.background.key, themeConfig.background.path);
+        this.load.image(themeConfig.player.key, themeConfig.player.path);
     }
 
-    create() {
+    create(data) {
+        // 添加背景
+        this.add.image(190, 340, themeConfig.background.key)
+            .setDisplaySize(380, 680);
 
-        this.background = this.add.tileSprite(190, 340, 380, 680, 'bg');
+        // 添加半透明蒙版
+        const mask = this.add.rectangle(190, 340, 380, 680, 0x000000, 0.4);
+        mask.setDepth(1);
 
-
-        // 添加游戏结束标题
-        this.add.text(190, 200, 'Game Over', {
+        // 添加Game Over文本
+        this.add.text(190, 250, 'Game Over', {
             fontSize: '48px',
             fill: '#fff',
             fontStyle: 'bold'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(2);
 
-        // 显示最终分数
-        this.add.text(190, 280, `Score: ${this.score}`, {
+        // 显示分数
+        this.add.text(190, 340, `Score: ${data && data.score ? data.score : 0}`, {
             fontSize: '36px',
-            fill: '#fff'
-        }).setOrigin(0.5);
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(2);
 
-        // 创建重新开始按钮
-        const restartButton = this.add.container(190, 400);
 
-        // 按钮背景
-        const buttonBg = this.add.rectangle(0, 0, 260, 60, 0x4CAF50);
-        buttonBg.setOrigin(0.5);
-        buttonBg.setInteractive({ useHandCursor: true });
 
-        // 按钮文字
-        const buttonText = this.add.text(0, 0, 'Click to download', {
+        // 添加重新开始按钮
+        const restartButton = this.add.text(190, 420, 'Click to download', {
             fontSize: '24px',
             fill: '#fff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
+            backgroundColor: '#4CAF50',
+            fontStyle: 'bold',
+            padding: { x: 20, y: 10 }
+        }).setOrigin(0.5).setInteractive().setDepth(2);
 
-        // 将背景和文字添加到容器
-        restartButton.add([buttonBg, buttonText]);
+        restartButton.on('pointerdown', () => {
+            this.scene.start('MenuScene');
+        });
 
         // 添加按钮悬停效果
-        buttonBg.on('pointerover', () => {
-            buttonBg.fillColor = 0x45a049;
+        restartButton.on('pointerover', () => {
+            restartButton.fillColor = 0x45a049;
         });
 
-        buttonBg.on('pointerout', () => {
-            buttonBg.fillColor = 0x4CAF50;
-        });
-
-        // 添加点击事件
-        buttonBg.on('pointerdown', () => {
-            this.scene.start('GameScene');
+        restartButton.on('pointerout', () => {
+            restartButton.fillColor = 0x4CAF50;
         });
 
         // // 添加提示文字

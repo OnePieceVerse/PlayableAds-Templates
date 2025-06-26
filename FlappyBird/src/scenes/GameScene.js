@@ -1,14 +1,19 @@
+import themeConfig from '../config/ThemeConfig.js';
+
 export default class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
     }
 
     preload() {
-        this.load.image('bg', './assets/bg.png');
-        this.load.image('bomb', './assets/bomb.png');
-        this.load.spritesheet('penguin', './assets/flying.png', { frameWidth: 640, frameHeight: 360 });
-        this.load.image('mountain_top', './assets/mountain_top.png');
-        this.load.image('mountain_bottom', './assets/mountian_bottom.png');
+        this.load.image(themeConfig.background.key, themeConfig.background.path);
+        this.load.image(themeConfig.bomb.key, themeConfig.bomb.path);
+        this.load.spritesheet(themeConfig.player_spritesheet.key, themeConfig.player_spritesheet.path, {
+            frameWidth: themeConfig.player_spritesheet.frameWidth,
+            frameHeight: themeConfig.player_spritesheet.frameHeight
+        });
+        this.load.image(themeConfig.obstacle_top.key, themeConfig.obstacle_top.path);
+        this.load.image(themeConfig.obstacle_bottom.key, themeConfig.obstacle_bottom.path);
     }
 
     create() {
@@ -24,30 +29,34 @@ export default class GameScene extends Phaser.Scene {
         this.obstaclePairs = new Map();    // 用于记录障碍物对
 
         // 添加背景
-        this.background = this.add.tileSprite(190, 340, 380, 680, 'bg');
+        this.background = this.add.image(190, 340, themeConfig.background.key)
+            .setDisplaySize(380, 680);
 
         // 创建玩家
-        this.player = this.physics.add.sprite(100, 340, 'penguin');
+        this.player = this.physics.add.sprite(100, 340, themeConfig.player_spritesheet.key);
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
-        // 指定玩家的大小
-        this.player.setScale(0.1);
-
-        // 调整碰撞体大小和位置（按照原尺寸设置）
-        this.player.setSize(560, 340);
-        // this.player.setOffset(20, 40);  // 从左边偏移4像素，顶部偏移8像素
+        // 设置玩家显示尺寸
+        this.player.setDisplaySize(64, 64);
+        this.player.body.setSize(themeConfig.player_spritesheet.frameWidth * 0.8, themeConfig.player_spritesheet.frameHeight * 0.7);
 
         // 创建动画
         this.anims.create({
             key: 'fly',
-            frames: this.anims.generateFrameNumbers('penguin', { start: 0, end: 23 }),
+            frames: this.anims.generateFrameNumbers(themeConfig.player_spritesheet.key, {
+                start: 0,
+                end: themeConfig.player_spritesheet.totalFrames - 1
+            }),
             frameRate: 24,
             repeat: -1
         });
 
         this.anims.create({
             key: 'fall',
-            frames: this.anims.generateFrameNumbers('penguin', { start: 0, end: 23 }),
+            frames: this.anims.generateFrameNumbers(themeConfig.player_spritesheet.key, {
+                start: 0,
+                end: themeConfig.player_spritesheet.totalFrames - 1
+            }),
             frameRate: 24,
             repeat: -1
         });
@@ -95,10 +104,6 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
-
-        // 启用物理调试模式
-        // 绿色框表示碰撞体（body），紫色框表示移动方向和速度
-        // this.physics.world.createDebugGraphic();
     }
 
     handleClick() {
@@ -150,7 +155,7 @@ export default class GameScene extends Phaser.Scene {
         const topHeight = Phaser.Math.Between(minTopHeight, maxTopHeight);
 
         // 计算底部障碍物的理想高度
-        const bottomHeight = screenHeight - topHeight - gap;
+        let bottomHeight = screenHeight - topHeight - gap;
 
         // 确保底部障碍物有足够的高度
         if (bottomHeight < 80) {
@@ -158,11 +163,9 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // 创建顶部障碍物
-        const topObstacle = this.obstacles.create(screenWidth, 0, 'mountain_top');
-        // 计算顶部障碍物需要的缩放比例来适配目标高度
-        const topScaleX = obstacleWidth / mountainWidth;  // 宽度适配
-        const topScaleY = topHeight / mountainHeight;      // 高度适配
-        topObstacle.setScale(topScaleX, topScaleY);
+        const topObstacle = this.obstacles.create(screenWidth, 0, themeConfig.obstacle_top.key);
+        // 设置顶部障碍物显示尺寸
+        topObstacle.setDisplaySize(obstacleWidth, topHeight);
         topObstacle.setOrigin(0, 0);
         topObstacle.setImmovable(true);
         topObstacle.body.allowGravity = false;
@@ -171,15 +174,13 @@ export default class GameScene extends Phaser.Scene {
         topObstacle.obstacleId = obstaclePairId;
         topObstacle.isTop = true;
         // 修正碰撞体大小，使其贴合拉伸后的图像
-        topObstacle.setSize(topObstacle.width - 360, topObstacle.height);
-        topObstacle.setOffset(180, 0);
+        // topObstacle.setSize(topObstacle.width - 360, topObstacle.height);
+        // topObstacle.setOffset(180, 0);
 
         // 创建底部障碍物
-        const bottomObstacle = this.obstacles.create(screenWidth, screenHeight - bottomHeight, 'mountain_bottom');
-        // 计算底部障碍物需要的缩放比例来适配目标高度
-        const bottomScaleX = obstacleWidth / mountainWidth;  // 宽度适配
-        const bottomScaleY = bottomHeight / mountainHeight;   // 高度适配
-        bottomObstacle.setScale(bottomScaleX, bottomScaleY);
+        const bottomObstacle = this.obstacles.create(screenWidth, screenHeight - bottomHeight, themeConfig.obstacle_bottom.key);
+        // 设置底部障碍物显示尺寸
+        bottomObstacle.setDisplaySize(obstacleWidth, bottomHeight);
         bottomObstacle.setOrigin(0, 0);
         bottomObstacle.setImmovable(true);
         bottomObstacle.body.allowGravity = false;
@@ -187,8 +188,8 @@ export default class GameScene extends Phaser.Scene {
         bottomObstacle.obstacleId = obstaclePairId;
         bottomObstacle.isTop = false;
         // 修正碰撞体大小，使其贴合拉伸后的图像
-        bottomObstacle.setSize(bottomObstacle.width - 360, bottomObstacle.height);
-        bottomObstacle.setOffset(180, 0);
+        // bottomObstacle.setSize(bottomObstacle.width - 360, bottomObstacle.height);
+        // bottomObstacle.setOffset(180, 0);
 
         // 记录障碍物对信息
         this.obstaclePairs.set(obstaclePairId, {
@@ -204,9 +205,9 @@ export default class GameScene extends Phaser.Scene {
     createBomb() {
         if (this.gameOver) return;
 
-        const bomb = this.bombs.create(380, Phaser.Math.Between(100, 580), 'bomb');
+        const bomb = this.bombs.create(380, Phaser.Math.Between(100, 580), themeConfig.bomb.key);
         bomb.setVelocityX(-300 * this.difficulty);  // 速度随难度增加
-        bomb.setScale(1.6);
+        bomb.setDisplaySize(25, 25);
         bomb.body.allowGravity = false;
         bomb.setCollideWorldBounds(false);
     }
