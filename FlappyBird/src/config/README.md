@@ -28,10 +28,10 @@
 
 ## 示例配置
 ```javascript
-// 修改主题
-const theme = "MyNewTheme";
+// 素材配置文件
+const theme = "TeamfightTactics";
 
-export const assetsConfig = {
+export const themeConfig = {
     theme: theme,
     background: {
         key: "background",
@@ -51,7 +51,24 @@ export const assetsConfig = {
         frameWidth: 640,    // 单帧宽度
         frameHeight: 360,   // 单帧高度
         totalFrames: 24     // 总帧数        
+    },
+    obstacleTop: {
+        key: "obstacleTop",
+        path: `./assets/${theme}/obstacle-top.png`,
+        desc: "顶部障碍物"
+    },
+    obstacleBottom: {
+        key: "obstacleBottom",
+        path: `./assets/${theme}/obstacle-bottom.png`,
+        desc: "底部障碍物"
+    },
+    bomb: {
+        key: "bomb",
+        path: `./assets/${theme}/bomb.png`,
+        desc: "炸弹"
     }
-    // ... 其他素材配置
 };
 ```
+
+## 注意
+为了保证素材伸缩后不出现形变，最好保证player、playerSpritesheet每帧、bomb素材的尺寸都为正方形，同时player和playerSpritesheet每帧的尺寸必须相同。

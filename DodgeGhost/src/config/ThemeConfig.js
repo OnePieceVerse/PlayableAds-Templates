@@ -1,4 +1,3 @@
-// 素材配置文件
 const theme = "demo";
 
 export const themeConfig = {
@@ -21,20 +20,25 @@ export const themeConfig = {
         frameHeight: 48,
         totalFrames: 4
     },
-    obstacleTop: {
-        key: "obstacleTop",
-        path: `./assets/${theme}/obstacle-top.png`,
-        desc: "顶部障碍物"
+    ghost: {
+        key: "ghost",
+        path: `./assets/${theme}/ghost.png`,
+        desc: "鬼魂"
     },
-    obstacleBottom: {
-        key: "obstacleBottom",
-        path: `./assets/${theme}/obstacle-bottom.png`,
-        desc: "底部障碍物"
+    stealth: {
+        key: "stealth",
+        path: `./assets/${theme}/stealth.png`,
+        desc: "无敌技能图标"
     },
-    bomb: {
-        key: "bomb",
-        path: `./assets/${theme}/bomb.png`,
-        desc: "炸弹"
+    borderRow: {
+        key: "borderRow",
+        path: `./assets/${theme}/border-row.png`,
+        desc: "横向边界"
+    },
+    borderColumn: {
+        key: "borderColumn",
+        path: `./assets/${theme}/border-column.png`,
+        desc: "纵向边界"
     }
 };
 

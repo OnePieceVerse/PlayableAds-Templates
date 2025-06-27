@@ -8,12 +8,12 @@ export default class GameScene extends Phaser.Scene {
     preload() {
         this.load.image(themeConfig.background.key, themeConfig.background.path);
         this.load.image(themeConfig.bomb.key, themeConfig.bomb.path);
-        this.load.spritesheet(themeConfig.player_spritesheet.key, themeConfig.player_spritesheet.path, {
-            frameWidth: themeConfig.player_spritesheet.frameWidth,
-            frameHeight: themeConfig.player_spritesheet.frameHeight
+        this.load.spritesheet(themeConfig.playerSpritesheet.key, themeConfig.playerSpritesheet.path, {
+            frameWidth: themeConfig.playerSpritesheet.frameWidth,
+            frameHeight: themeConfig.playerSpritesheet.frameHeight
         });
-        this.load.image(themeConfig.obstacle_top.key, themeConfig.obstacle_top.path);
-        this.load.image(themeConfig.obstacle_bottom.key, themeConfig.obstacle_bottom.path);
+        this.load.image(themeConfig.obstacleTop.key, themeConfig.obstacleTop.path);
+        this.load.image(themeConfig.obstacleBottom.key, themeConfig.obstacleBottom.path);
     }
 
     create() {
@@ -33,19 +33,19 @@ export default class GameScene extends Phaser.Scene {
             .setDisplaySize(380, 680);
 
         // 创建玩家
-        this.player = this.physics.add.sprite(100, 340, themeConfig.player_spritesheet.key);
+        this.player = this.physics.add.sprite(100, 340, themeConfig.playerSpritesheet.key);
         this.player.setBounce(0.2);
         this.player.setCollideWorldBounds(true);
         // 设置玩家显示尺寸
         this.player.setDisplaySize(64, 64);
-        this.player.body.setSize(themeConfig.player_spritesheet.frameWidth * 0.8, themeConfig.player_spritesheet.frameHeight * 0.7);
+        this.player.body.setSize(themeConfig.playerSpritesheet.frameWidth * 0.6, themeConfig.playerSpritesheet.frameHeight * 0.6);
 
         // 创建动画
         this.anims.create({
             key: 'fly',
-            frames: this.anims.generateFrameNumbers(themeConfig.player_spritesheet.key, {
+            frames: this.anims.generateFrameNumbers(themeConfig.playerSpritesheet.key, {
                 start: 0,
-                end: themeConfig.player_spritesheet.totalFrames - 1
+                end: themeConfig.playerSpritesheet.totalFrames - 1
             }),
             frameRate: 24,
             repeat: -1
@@ -53,9 +53,9 @@ export default class GameScene extends Phaser.Scene {
 
         this.anims.create({
             key: 'fall',
-            frames: this.anims.generateFrameNumbers(themeConfig.player_spritesheet.key, {
+            frames: this.anims.generateFrameNumbers(themeConfig.playerSpritesheet.key, {
                 start: 0,
-                end: themeConfig.player_spritesheet.totalFrames - 1
+                end: themeConfig.playerSpritesheet.totalFrames - 1
             }),
             frameRate: 24,
             repeat: -1
@@ -163,7 +163,7 @@ export default class GameScene extends Phaser.Scene {
         }
 
         // 创建顶部障碍物
-        const topObstacle = this.obstacles.create(screenWidth, 0, themeConfig.obstacle_top.key);
+        const topObstacle = this.obstacles.create(screenWidth, 0, themeConfig.obstacleTop.key);
         // 设置顶部障碍物显示尺寸
         topObstacle.setDisplaySize(obstacleWidth, topHeight);
         topObstacle.setOrigin(0, 0);
@@ -173,12 +173,9 @@ export default class GameScene extends Phaser.Scene {
         const obstaclePairId = Date.now() + Math.random();  // 确保唯一性
         topObstacle.obstacleId = obstaclePairId;
         topObstacle.isTop = true;
-        // 修正碰撞体大小，使其贴合拉伸后的图像
-        // topObstacle.setSize(topObstacle.width - 360, topObstacle.height);
-        // topObstacle.setOffset(180, 0);
 
         // 创建底部障碍物
-        const bottomObstacle = this.obstacles.create(screenWidth, screenHeight - bottomHeight, themeConfig.obstacle_bottom.key);
+        const bottomObstacle = this.obstacles.create(screenWidth, screenHeight - bottomHeight, themeConfig.obstacleBottom.key);
         // 设置底部障碍物显示尺寸
         bottomObstacle.setDisplaySize(obstacleWidth, bottomHeight);
         bottomObstacle.setOrigin(0, 0);
@@ -187,9 +184,6 @@ export default class GameScene extends Phaser.Scene {
         bottomObstacle.setVelocityX(-200 * this.difficulty);
         bottomObstacle.obstacleId = obstaclePairId;
         bottomObstacle.isTop = false;
-        // 修正碰撞体大小，使其贴合拉伸后的图像
-        // bottomObstacle.setSize(bottomObstacle.width - 360, bottomObstacle.height);
-        // bottomObstacle.setOffset(180, 0);
 
         // 记录障碍物对信息
         this.obstaclePairs.set(obstaclePairId, {
