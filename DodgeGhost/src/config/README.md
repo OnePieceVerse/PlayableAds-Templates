@@ -67,6 +67,21 @@ export const themeConfig = {
         key: "borderColumn",
         path: `./assets/${theme}/border-column.png`,
         desc: "纵向边界"
+    },
+        bgm: {
+        key: "bgm",
+        path: `./assets/${theme}/bgm.mp3`,
+        desc: "背景音乐"
+    },
+    stealthSound: {
+        key: "stealthSound",
+        path: `./assets/${theme}/stealth.mp3`,
+        desc: "无敌技能音效"
+    },
+    loseSound: {
+        key: "loseSound",
+        path: `./assets/${theme}/lose.mp3`,
+        desc: "游戏失败音效"
     }
 };
 ``` 

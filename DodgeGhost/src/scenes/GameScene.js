@@ -38,6 +38,10 @@ export default class GameScene extends Phaser.Scene {
         this.load.spritesheet('playerSpritesheet', themeConfig.playerSpritesheet.path, { frameWidth: themeConfig.playerSpritesheet.frameWidth, frameHeight: themeConfig.playerSpritesheet.frameHeight });
         this.load.image('player', themeConfig.player.path);
         this.load.image('stealth', themeConfig.stealth.path);
+        // 加载音频
+        this.load.audio('bgm', themeConfig.bgm.path);
+        this.load.audio('stealthSound', themeConfig.stealthSound.path);
+        this.load.audio('loseSound', themeConfig.loseSound.path);
     }
 
     create() {
@@ -125,6 +129,14 @@ export default class GameScene extends Phaser.Scene {
             d: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
             space: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
         };
+
+        // 音频对象
+        this.bgmSound = this.sound.add('bgm', { loop: true, volume: 0.5 });
+        this.stealthSound = this.sound.add('stealthSound', { volume: 1 });
+        this.loseSound = this.sound.add('loseSound', { volume: 1 });
+
+        // 开始时播放背景音乐
+        this.bgmSound.play();
 
         // 创建开始游戏蒙版
         this.createStartOverlay();
@@ -257,7 +269,13 @@ export default class GameScene extends Phaser.Scene {
         this.physics.pause();
         // 玩家变红
         player.setTint(0xff0000);
-
+        // 停止背景音乐，播放lose音效
+        if (this.bgmSound && this.bgmSound.isPlaying) {
+            this.bgmSound.stop();
+        }
+        if (this.loseSound) {
+            this.loseSound.play();
+        }
         // 0.5秒后跳转到游戏结束场景
         this.time.delayedCall(500, () => {
             this.scene.start('GameOverScene', { time: this.gameTime });
@@ -474,6 +492,10 @@ export default class GameScene extends Phaser.Scene {
     activateSkill() {
         if (this.skillCooldown > 0 || this.isInvincible || !this.isGameStarted) return;
 
+        // 播放隐身音效
+        if (this.stealthSound) {
+            this.stealthSound.play();
+        }
         // 激活无敌状态
         this.isInvincible = true;
         this.player.setAlpha(0.6); // 变透明
