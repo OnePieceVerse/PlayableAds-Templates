@@ -126,6 +126,7 @@
             let model2, mixer2, animationClip2, animationAction2;
             let model3, mixer3, animationClip3, animationAction3;
             let model4, mixer4, animationClip4, animationAction4;
+            let model5, mixer5, animationClip5, animationAction5; // rumba-dancing模型
 
             // --- 1. 场景初始化 (Scene Initialization) ---
             const scene = new THREE.Scene();
@@ -345,6 +346,64 @@
                 }
             );
 
+            // 加载第五个模型 rumba-dancing.fbx (Load the fifth model - rumba-dancing FBX)
+            fbxLoader.load(
+                './models/rumba-dancing.fbx',
+                (fbx) => {
+                    model5 = fbx;
+                    model5.scale.set(0.009, 0.009, 0.009); // FBX模型通常比较大，需要缩小
+                    model5.position.set(2.5, 0.5, 1.5); // 放置在画框前方右侧
+                    model5.rotation.y = -Math.PI / 4; // 旋转-45度
+
+                    // 确保模型可以投射和接收阴影，并启用蒙皮动画
+                    model5.traverse((node) => {
+                        if (node.isMesh) {
+                            node.castShadow = true;
+                            node.receiveShadow = true;
+
+                            // 如果是蒙皮网格，启用材质的skinning功能
+                            if (node.isSkinnedMesh) {
+                                if (node.material) {
+                                    if (Array.isArray(node.material)) {
+                                        // 如果是材质数组
+                                        node.material.forEach(material => {
+                                            material.skinning = true;
+                                            material.needsUpdate = true;
+                                        });
+                                    } else {
+                                        // 如果是单个材质
+                                        node.material.skinning = true;
+                                        node.material.needsUpdate = true;
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    scene.add(model5);
+
+                    // 加载模型的内置动画并循环播放
+                    mixer5 = new THREE.AnimationMixer(model5);
+                    if (fbx.animations && fbx.animations.length > 0) {
+                        // 播放所有动画或选择第一个动画
+                        animationClip5 = fbx.animations[0];
+                        animationAction5 = mixer5.clipAction(animationClip5);
+                        animationAction5.setLoop(THREE.LoopRepeat); // 设置循环播放
+                        animationAction5.play();
+
+                        console.log(`rumba-dancing.fbx 加载成功，包含 ${fbx.animations.length} 个动画`);
+                    } else {
+                        console.log('rumba-dancing.fbx 没有包含动画');
+                    }
+
+                    startRumbaDancingAnimation();
+                },
+                undefined,
+                (error) => {
+                    console.error('An error happened while loading the rumba-dancing FBX model:', error);
+                }
+            );
+
             function startAngryHeroAnimation() {
                 if (!model) return;
 
@@ -407,6 +466,37 @@
                 }, "<");
             }
 
+            function startRumbaDancingAnimation() {
+                if (!model5) return;
+
+                // 使用GSAP创建一个无限循环的时间线动画，模拟伦巴舞蹈的优雅移动
+                const tl = gsap.timeline({ repeat: -1, repeatDelay: 1.5, delay: 0.5 });
+
+                // 优雅的伦巴舞步移动
+                tl.to(model5.position, {
+                    x: 1.8, y: 0.8, z: 2.2, duration: 4, ease: 'power2.inOut'
+                });
+                tl.to(model5.rotation, {
+                    y: -Math.PI / 6, duration: 4, ease: 'power2.inOut'
+                }, "<");
+
+                // 移动到左侧
+                tl.to(model5.position, {
+                    x: -1.2, y: 0.3, z: 1.8, duration: 4, ease: 'power2.inOut'
+                }, ">0.5");
+                tl.to(model5.rotation, {
+                    y: Math.PI / 4, duration: 4, ease: 'power2.inOut'
+                }, "<");
+
+                // 回到右侧初始位置
+                tl.to(model5.position, {
+                    x: 2.5, y: 0.5, z: 1.5, duration: 4, ease: 'power2.inOut'
+                }, ">0.5");
+                tl.to(model5.rotation, {
+                    y: -Math.PI / 4, duration: 4, ease: 'power2.inOut'
+                }, "<");
+            }
+
             // --- 9. 响应式布局 (Responsive Layout) ---
             function onWindowResize() {
                 const width = sceneContainer.clientWidth;
@@ -434,6 +524,9 @@
                 }
                 if(mixer4) {
                     mixer4.update(delta);
+                }
+                if(mixer5) {
+                    mixer5.update(delta);
                 }
 
                 controls.update(); // 更新控制器
