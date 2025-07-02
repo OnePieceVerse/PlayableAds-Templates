@@ -66,6 +66,15 @@ export const themeConfig = {
         key: "bomb",
         path: `./assets/${theme}/bomb.png`,
         desc: "炸弹"
+    },clickSound: {
+        key: "clickSound",
+        path: `./assets/${theme}/click.mp3`,
+        desc: "点击音效"
+    },
+    loseSound: {
+        key: "loseSound",
+        path: `./assets/${theme}/lose.mp3`,
+        desc: "游戏失败音效"
     }
 };
 ```

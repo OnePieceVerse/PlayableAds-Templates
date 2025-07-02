@@ -14,6 +14,9 @@ export default class GameScene extends Phaser.Scene {
         });
         this.load.image(themeConfig.obstacleTop.key, themeConfig.obstacleTop.path);
         this.load.image(themeConfig.obstacleBottom.key, themeConfig.obstacleBottom.path);
+        // 加载音效
+        this.load.audio(themeConfig.clickSound.key, themeConfig.clickSound.path);
+        this.load.audio(themeConfig.loseSound.key, themeConfig.loseSound.path);
     }
 
     create() {
@@ -104,6 +107,10 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this,
             loop: true
         });
+
+        // 添加音效对象
+        this.clickSound = this.sound.add(themeConfig.clickSound.key);
+        this.loseSound = this.sound.add(themeConfig.loseSound.key);
     }
 
     handleClick() {
@@ -111,6 +118,8 @@ export default class GameScene extends Phaser.Scene {
             // 游戏结束后忽略所有点击输入
             return;
         }
+        // 播放点击音效
+        this.clickSound.play();
 
         this.player.setVelocityY(-300);
         this.player.anims.play('fly', true);
@@ -210,10 +219,11 @@ export default class GameScene extends Phaser.Scene {
         this.gameOver = true;
         this.physics.pause();
         player.setTint(0xff0000);
+        // 播放失败音效
+        this.loseSound.play();
 
         // 移除点击事件监听器，防止在死亡期间意外重启
         this.input.off('pointerdown', this.handleClick, this);
-
         // 延迟0.5秒后切换到游戏结束场景
         this.time.delayedCall(500, () => {
             this.scene.start('GameOverScene', { score: this.score });
@@ -224,10 +234,11 @@ export default class GameScene extends Phaser.Scene {
         this.gameOver = true;
         this.physics.pause();
         player.setTint(0xff0000);
+        // 播放失败音效
+        this.loseSound.play();
 
         // 移除点击事件监听器，防止在死亡期间意外重启
         this.input.off('pointerdown', this.handleClick, this);
-
         // 延迟0.5秒后切换到游戏结束场景
         this.time.delayedCall(500, () => {
             this.scene.start('GameOverScene', { score: this.score });
