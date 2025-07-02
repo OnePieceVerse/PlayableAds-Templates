@@ -27,14 +27,21 @@ export class Preload extends Phaser.Scene {
             loadingFill.width = 400 * value;
         });
 
+        this.load.setPath('assets/clash-of-cats');
         // Load game images
-        this.load.image('image1', 'assets/image-1.png');
-        this.load.image('image2', 'assets/image-2.png');
-        this.load.image('image3', 'assets/image-3.png');
-        this.load.image('image4', 'assets/image-4.png');
+        this.load.image('image1', 'image/image-1.png');
+        this.load.image('image2', 'image/image-2.png');
+        this.load.image('image3', 'image/image-3.png');
+        this.load.image('image4', 'image/image-4.png');
 
         // Create card back image as rectangle
         this.load.image('cardBack', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
+
+        // load audios
+        this.load.audio('background-music', 'audio/background.mp3');
+        this.load.audio('card-turn-sound', 'audio/card-turn.mp3');
+        this.load.audio('match-right-sound', 'audio/match-right.mp3');
+        this.load.audio('match-wrong-sound', 'audio/match-wrong.mp3');
     }
 
     create() {

@@ -4,11 +4,6 @@ export class Start extends Phaser.Scene {
         super('Start');
     }
 
-    preload() {
-        // Load background image
-        this.load.image('background', 'assets/space.png');
-    }
-
     create() {
         // Add background
         this.add.rectangle(300, 360, 600, 800, 0x1e1e2e);

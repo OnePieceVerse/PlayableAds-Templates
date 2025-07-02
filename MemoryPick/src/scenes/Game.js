@@ -13,14 +13,16 @@ export class Game extends Phaser.Scene {
         this.grid = [];
         this.currentTarget = null;
         this.foundImages = [];
-        this.gameTime = 30000; // 60 seconds
+        this.gameTime = 10000; // 10 seconds
         this.timer = null;
         this.timeText = null;
         this.batchIndex = 0;
         this.maxBatches = 4;
         this.showingBatches = true;
-        this.batchDelay = 1500; // 1.5 seconds per batch
+        this.batchDelay = 1000; // 1.5 seconds per batch
         this.instructionText = null;
+        this.audioEnabled = false;
+        this.firstUserInteraction = false;
     }
 
     preload() {
@@ -65,11 +67,51 @@ export class Game extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(1, 0);
 
+        // Add global click listener to enable audio on first interaction
+        this.input.on('pointerdown', this.enableAudioOnFirstClick, this);
+
         // Select and show target image first
         this.selectRandomTarget();
 
         // Start the batch showing sequence
         this.startBatchSequence();
+    }
+
+    enableAudioOnFirstClick() {
+        if (!this.firstUserInteraction) {
+            this.firstUserInteraction = true;
+            this.initializeAudio();
+            // Remove the global listener after first interaction
+            this.input.off('pointerdown', this.enableAudioOnFirstClick, this);
+        }
+    }
+
+    initializeAudio() {
+        if (!this.audioEnabled) {
+            try {
+                // Initialize background music
+                if (!this.game.backgroundMusic || !this.game.backgroundMusic.isPlaying) {
+                    this.game.backgroundMusic = this.sound.add('background-music', {
+                        volume: 0.5,
+                        loop: true
+                    });
+                    this.game.backgroundMusic.play();
+                }
+                this.audioEnabled = true;
+            } catch (error) {
+                console.warn('Failed to initialize audio:', error);
+            }
+        }
+    }
+
+    playSound(soundKey) {
+        if (this.audioEnabled) {
+            try {
+                this.sound.play(soundKey);
+            } catch (error) {
+                console.warn('Failed to play sound:', soundKey, error);
+            }
+        }
     }
 
     createGrid() {
@@ -134,7 +176,7 @@ export class Game extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Start showing batches
-        this.time.delayedCall(1000, () => {
+        this.time.delayedCall(500, () => {
             this.showNextBatch();
         });
     }
@@ -170,7 +212,7 @@ export class Game extends Phaser.Scene {
         }
 
         // Schedule next batch or end sequence
-        this.time.delayedCall(this.batchDelay + 500, () => {
+        this.time.delayedCall(this.batchDelay, () => {
             // Hide current batch
             this.hideAllCards();
 
@@ -339,6 +381,9 @@ export class Game extends Phaser.Scene {
             card.cardBack.setFillStyle(0x27ae60); // Green for found
             this.foundImages.push(card);
 
+            // Play correct match sound
+            this.playSound('match-right-sound');
+
             // Add success pulse animation
             this.tweens.add({
                 targets: card.container,
@@ -366,6 +411,9 @@ export class Game extends Phaser.Scene {
         } else {
             // Wrong match - game over
             card.cardBack.setFillStyle(0xe74c3c); // Red for wrong
+
+            // Play wrong match sound
+            this.playSound('match-wrong-sound');
 
             // Add error shake animation
             this.tweens.add({
