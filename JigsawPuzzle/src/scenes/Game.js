@@ -21,6 +21,18 @@ export class Game extends Phaser.Scene {
     }
 
     create() {
+        // add audio
+        this.sound.add('background-music', {
+            volume: 0.5,
+            loop: true
+        });
+        this.sound.add('place-right', {
+            volume: 0.5,
+            loop: false
+        });
+
+        this.sound.play('background-music');
+
         // Center coordinates of the game canvas (hard-coded in main.js config)
         const centerX = 300;
         const centerY = 260;
@@ -171,6 +183,9 @@ export class Game extends Phaser.Scene {
             const snapDistance = Math.min(pieceW, pieceH) * 0.4;
             const dist = Phaser.Math.Distance.Between(gameObject.x, gameObject.y, gameObject.correctX, gameObject.correctY);
             if (dist < snapDistance) {
+                // play place-right-sound
+                this.sound.play('place-right');
+
                 // Snap into place
                 gameObject.x = gameObject.correctX;
                 gameObject.y = gameObject.correctY;
